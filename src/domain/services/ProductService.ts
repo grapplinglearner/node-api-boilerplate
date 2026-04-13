@@ -45,20 +45,36 @@ export class ProductService {
     return this.productRepository.findAll();
   }
 
-  async updateProduct(id: string, updates: Partial<Product>): Promise<Product> {
+  async updateProduct(
+    id: string,
+    name: string,
+    sku: string,
+    description: string,
+    price: number,
+    quantity: number,
+    warehouseLocation: string
+  ): Promise<Product> {
     const product = await this.getProduct(id);
 
-    if (updates.name) product.name = updates.name;
-    if (updates.description) product.description = updates.description;
-    if (updates.price !== undefined) {
-      if (updates.price < 0) {
-        throw new Error('Price cannot be negative');
+    // Check if SKU is being changed and if it's already taken
+    if (sku !== product.sku) {
+      const existingProduct = await this.productRepository.findBySku(sku);
+      if (existingProduct) {
+        throw new Error(`Product with SKU ${sku} already exists`);
       }
-      product.price = updates.price;
     }
-    if (updates.warehouseLocation) product.warehouseLocation = updates.warehouseLocation;
 
+    product.name = name;
+    product.sku = sku;
+    product.description = description;
+    if (price < 0) {
+      throw new Error('Price cannot be negative');
+    }
+    product.price = price;
+    product.quantity = quantity;
+    product.warehouseLocation = warehouseLocation;
     product.updatedAt = new Date();
+
     return this.productRepository.update(product);
   }
 

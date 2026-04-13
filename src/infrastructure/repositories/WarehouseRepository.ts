@@ -26,15 +26,21 @@ export class WarehouseRepository implements IWarehouseRepository {
   }
 
   async save(warehouse: Warehouse): Promise<Warehouse> {
-    const doc = await WarehouseModel.create({
-      _id: warehouse.id,
+    const docData: any = {
       name: warehouse.name,
       location: warehouse.location,
       capacity: warehouse.capacity,
       currentUsage: warehouse.currentUsage,
       createdAt: warehouse.createdAt,
       updatedAt: warehouse.updatedAt,
-    });
+    };
+
+    // Only set _id if it's not empty (for existing warehouses)
+    if (warehouse.id && warehouse.id.trim() !== '') {
+      docData._id = warehouse.id;
+    }
+
+    const doc = await WarehouseModel.create(docData);
     return this.mapToEntity(doc);
   }
 

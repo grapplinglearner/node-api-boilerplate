@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Response } from 'express';
 import { InventoryTransferService } from '../../domain/services/InventoryTransferService';
 import {
   InitiateTransferUseCase,
@@ -7,8 +7,10 @@ import {
   GetPendingTransfersUseCase,
   ListAllTransfersUseCase,
 } from '../../application/usecases/InventoryTransferUseCases';
+import { AuthMiddleware, AuthenticatedRequest } from '../middleware/authMiddleware';
+import { Permission } from '../../domain/types/auth';
 
-export function createTransferRoutes(transferService: InventoryTransferService): Router {
+export function createTransferRoutes(transferService: InventoryTransferService, authMiddleware: AuthMiddleware): Router {
   const router = Router();
 
   const initiateTransferUseCase = new InitiateTransferUseCase(transferService);
@@ -17,7 +19,7 @@ export function createTransferRoutes(transferService: InventoryTransferService):
   const getPendingUseCase = new GetPendingTransfersUseCase(transferService);
   const listAllUseCase = new ListAllTransfersUseCase(transferService);
 
-  router.post('/', async (req: Request, res: Response) => {
+  router.post('/', authMiddleware.requirePermission(Permission.CREATE_TRANSFERS), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const transfer = await initiateTransferUseCase.execute({
         id: req.body.id,
@@ -32,7 +34,7 @@ export function createTransferRoutes(transferService: InventoryTransferService):
     }
   });
 
-  router.patch('/:id/in-transit', async (req: Request, res: Response) => {
+  router.patch('/:id/in-transit', authMiddleware.requirePermission(Permission.UPDATE_TRANSFERS), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const transfer = await markInTransitUseCase.execute(id);
@@ -42,7 +44,7 @@ export function createTransferRoutes(transferService: InventoryTransferService):
     }
   });
 
-  router.patch('/:id/complete', async (req: Request, res: Response) => {
+  router.patch('/:id/complete', authMiddleware.requirePermission(Permission.UPDATE_TRANSFERS), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const transfer = await completeTransferUseCase.execute(id);
@@ -52,7 +54,7 @@ export function createTransferRoutes(transferService: InventoryTransferService):
     }
   });
 
-  router.get('/pending', async (_req: Request, res: Response) => {
+  router.get('/pending', authMiddleware.requirePermission(Permission.READ_TRANSFERS), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const transfers = await getPendingUseCase.execute();
       return res.json(transfers);
@@ -61,7 +63,7 @@ export function createTransferRoutes(transferService: InventoryTransferService):
     }
   });
 
-  router.get('/', async (_req: Request, res: Response) => {
+  router.get('/', authMiddleware.requirePermission(Permission.READ_TRANSFERS), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const transfers = await listAllUseCase.execute();
       return res.json(transfers);

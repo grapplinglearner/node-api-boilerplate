@@ -27,8 +27,7 @@ export class InventoryTransferRepository implements IInventoryTransferRepository
   }
 
   async save(transfer: InventoryTransfer): Promise<InventoryTransfer> {
-    const doc = await InventoryTransferModel.create({
-      _id: transfer.id,
+    const docData: any = {
       productId: transfer.productId,
       fromWarehouseId: transfer.fromWarehouseId,
       toWarehouseId: transfer.toWarehouseId,
@@ -36,7 +35,14 @@ export class InventoryTransferRepository implements IInventoryTransferRepository
       status: transfer.status,
       createdAt: transfer.createdAt,
       updatedAt: transfer.updatedAt,
-    });
+    };
+
+    // Only set _id if it's not empty (for existing transfers)
+    if (transfer.id && transfer.id.trim() !== '') {
+      docData._id = transfer.id;
+    }
+
+    const doc = await InventoryTransferModel.create(docData);
     return this.mapToEntity(doc);
   }
 

@@ -41,6 +41,37 @@ export class ListProductsUseCase {
   }
 }
 
+export class UpdateProductUseCase {
+  constructor(private productService: ProductService) {}
+
+  async execute(productId: string, input: {
+    name: string;
+    sku: string;
+    description: string;
+    price: number;
+    quantity: number;
+    warehouseLocation: string;
+  }): Promise<Product> {
+    return this.productService.updateProduct(
+      productId,
+      input.name,
+      input.sku,
+      input.description,
+      input.price,
+      input.quantity,
+      input.warehouseLocation
+    );
+  }
+}
+
+export class DeleteProductUseCase {
+  constructor(private productService: ProductService) {}
+
+  async execute(productId: string): Promise<void> {
+    return this.productService.deleteProduct(productId);
+  }
+}
+
 export class UpdateProductStockUseCase {
   constructor(private productService: ProductService) {}
 

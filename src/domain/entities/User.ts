@@ -1,9 +1,11 @@
+import { UserRole } from '../types/auth';
+
 export interface IUser {
   id: string;
   email: string;
   passwordHash: string;
   name: string;
-  role: 'admin' | 'warehouse_manager' | 'staff';
+  role: UserRole;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -14,7 +16,7 @@ export class User {
     public email: string,
     public passwordHash: string,
     public name: string,
-    public role: 'admin' | 'warehouse_manager' | 'staff',
+    public role: UserRole,
     public createdAt: Date,
     public updatedAt: Date
   ) {
@@ -34,7 +36,8 @@ export class User {
       throw new Error('Password hash is required');
     }
 
-    if (!['admin', 'warehouse_manager', 'staff'].includes(this.role)) {
+    const validRoles = Object.values(UserRole);
+    if (!validRoles.includes(this.role)) {
       throw new Error('Invalid role');
     }
   }
@@ -45,11 +48,15 @@ export class User {
   }
 
   isAdmin(): boolean {
-    return this.role === 'admin';
+    return this.role === UserRole.ADMIN || this.role === UserRole.SUPER_ADMIN;
+  }
+
+  isSuperAdmin(): boolean {
+    return this.role === UserRole.SUPER_ADMIN;
   }
 
   isManager(): boolean {
-    return this.role === 'warehouse_manager';
+    return this.role === UserRole.ADMIN || this.role === UserRole.MODERATOR;
   }
 
   canManageWarehouse(): boolean {

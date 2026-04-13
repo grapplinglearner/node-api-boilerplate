@@ -25,6 +25,22 @@ export class ListWarehousesUseCase {
   }
 }
 
+export class UpdateWarehouseUseCase {
+  constructor(private warehouseService: WarehouseService) {}
+
+  async execute(warehouseId: string, input: { name: string; location: string; capacity: number }): Promise<Warehouse> {
+    return this.warehouseService.updateWarehouse(warehouseId, input.name, input.location, input.capacity);
+  }
+}
+
+export class DeleteWarehouseUseCase {
+  constructor(private warehouseService: WarehouseService) {}
+
+  async execute(warehouseId: string): Promise<void> {
+    return this.warehouseService.deleteWarehouse(warehouseId);
+  }
+}
+
 export class GetWarehouseCapacityUseCase {
   constructor(private warehouseService: WarehouseService) {}
 

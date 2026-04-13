@@ -80,7 +80,7 @@ export interface IUserDocument extends Document {
   email: string;
   passwordHash: string;
   name: string;
-  role: 'admin' | 'warehouse_manager' | 'staff';
+  role: 'super_admin' | 'admin' | 'moderator' | 'user';
   createdAt: Date;
   updatedAt: Date;
 }
@@ -92,8 +92,8 @@ const userSchema = new Schema<IUserDocument>(
     name: { type: String, required: true },
     role: {
       type: String,
-      enum: ['admin', 'warehouse_manager', 'staff'],
-      default: 'staff',
+      enum: ['super_admin', 'admin', 'moderator', 'user'],
+      default: 'user',
     },
   },
   { timestamps: true }

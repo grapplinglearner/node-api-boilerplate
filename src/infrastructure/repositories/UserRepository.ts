@@ -1,6 +1,7 @@
 import { User } from '../../domain/entities/User';
 import { IUserRepository } from '../../domain/repositories/IRepository';
 import { UserModel, IUserDocument } from '../database/schemas/schemas';
+import { UserRole } from '../../domain/types/auth';
 
 export class UserRepository implements IUserRepository {
   private mapToEntity(doc: IUserDocument): User {
@@ -9,7 +10,7 @@ export class UserRepository implements IUserRepository {
       doc.email,
       doc.passwordHash,
       doc.name,
-      doc.role,
+      doc.role as UserRole,
       doc.createdAt,
       doc.updatedAt
     );
@@ -31,15 +32,21 @@ export class UserRepository implements IUserRepository {
   }
 
   async save(user: User): Promise<User> {
-    const doc = await UserModel.create({
-      _id: user.id,
+    const docData: any = {
       email: user.email,
       passwordHash: user.passwordHash,
       name: user.name,
       role: user.role,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
-    });
+    };
+
+    // Only set _id if it's not empty (for existing users)
+    if (user.id && user.id.trim() !== '') {
+      docData._id = user.id;
+    }
+
+    const doc = await UserModel.create(docData);
     return this.mapToEntity(doc);
   }
 

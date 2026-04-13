@@ -26,13 +26,18 @@ export class WarehouseService {
     return this.warehouseRepository.findAll();
   }
 
-  async updateWarehouse(id: string, updates: Partial<Warehouse>): Promise<Warehouse> {
+  async updateWarehouse(
+    id: string,
+    name: string,
+    location: string,
+    capacity: number
+  ): Promise<Warehouse> {
     const warehouse = await this.getWarehouse(id);
 
-    if (updates.name) warehouse.name = updates.name;
-    if (updates.location) warehouse.location = updates.location;
-    if (updates.capacity !== undefined && updates.capacity > 0) {
-      warehouse.capacity = updates.capacity;
+    warehouse.name = name;
+    warehouse.location = location;
+    if (capacity > 0) {
+      warehouse.capacity = capacity;
     }
 
     warehouse.updatedAt = new Date();

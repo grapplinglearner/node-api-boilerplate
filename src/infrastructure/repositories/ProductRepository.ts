@@ -33,8 +33,7 @@ export class ProductRepository implements IProductRepository {
   }
 
   async save(product: Product): Promise<Product> {
-    const doc = await ProductModel.create({
-      _id: product.id,
+    const docData: any = {
       name: product.name,
       sku: product.sku,
       description: product.description,
@@ -43,7 +42,14 @@ export class ProductRepository implements IProductRepository {
       warehouseLocation: product.warehouseLocation,
       createdAt: product.createdAt,
       updatedAt: product.updatedAt,
-    });
+    };
+
+    // Only set _id if it's not empty (for existing products)
+    if (product.id && product.id.trim() !== '') {
+      docData._id = product.id;
+    }
+
+    const doc = await ProductModel.create(docData);
     return this.mapToEntity(doc);
   }
 
