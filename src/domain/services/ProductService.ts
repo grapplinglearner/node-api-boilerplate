@@ -1,8 +1,15 @@
 import { Product } from '../entities/Product';
 import { IProductRepository } from '../repositories/IRepository';
+import { CacheService } from '../../infrastructure/cache/CacheService';
+import { getPaginationOptions, createPaginatedResponse, PaginatedResponse } from '../../presentation/utils/pagination';
+import { Request } from 'express';
+import { config } from '../../infrastructure/config/config';
 
 export class ProductService {
-  constructor(private productRepository: IProductRepository) {}
+  constructor(
+    private productRepository: IProductRepository,
+    private cacheService?: CacheService
+  ) {}
 
   async createProduct(
     id: string,
@@ -30,18 +37,48 @@ export class ProductService {
       new Date()
     );
 
-    return this.productRepository.save(product);
+    const savedProduct = await this.productRepository.save(product);
+
+    if (this.cacheService) {
+      await this.cacheService.clear('products:*');
+    }
+
+    return savedProduct;
   }
 
   async getProduct(id: string): Promise<Product> {
+    const cacheKey = `products:${id}`;
+
+    if (this.cacheService) {
+      const cached = await this.cacheService.get<Product>(cacheKey);
+      if (cached) {
+        return cached;
+      }
+    }
+
     const product = await this.productRepository.findById(id);
     if (!product) {
       throw new Error(`Product with ID ${id} not found`);
     }
+
+    if (this.cacheService) {
+      await this.cacheService.set(cacheKey, product, config.CACHE_TTL_PRODUCTS);
+    }
+
     return product;
   }
 
-  async getAllProducts(): Promise<Product[]> {
+  async getAllProducts(req?: Request): Promise<Product[] | PaginatedResponse<Product>> {
+    if (req) {
+      const options = getPaginationOptions(req);
+      const [products, total] = await Promise.all([
+        this.productRepository.findAllPaginated(options.skip, options.limit),
+        this.productRepository.count(),
+      ]);
+
+      return createPaginatedResponse(products, total, options);
+    }
+
     return this.productRepository.findAll();
   }
 
@@ -56,7 +93,6 @@ export class ProductService {
   ): Promise<Product> {
     const product = await this.getProduct(id);
 
-    // Check if SKU is being changed and if it's already taken
     if (sku !== product.sku) {
       const existingProduct = await this.productRepository.findBySku(sku);
       if (existingProduct) {
@@ -75,12 +111,24 @@ export class ProductService {
     product.warehouseLocation = warehouseLocation;
     product.updatedAt = new Date();
 
-    return this.productRepository.update(product);
+    const updatedProduct = await this.productRepository.update(product);
+
+    if (this.cacheService) {
+      await this.cacheService.delete(`products:${id}`);
+      await this.cacheService.clear('products:*');
+    }
+
+    return updatedProduct;
   }
 
   async deleteProduct(id: string): Promise<void> {
     await this.getProduct(id);
-    return this.productRepository.delete(id);
+    await this.productRepository.softDelete(id);
+
+    if (this.cacheService) {
+      await this.cacheService.delete(`products:${id}`);
+      await this.cacheService.clear('products:*');
+    }
   }
 
   async increaseStock(id: string, quantity: number): Promise<Product> {

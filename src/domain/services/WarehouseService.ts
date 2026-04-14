@@ -1,8 +1,15 @@
 import { Warehouse } from '../entities/Warehouse';
 import { IWarehouseRepository } from '../repositories/IRepository';
+import { CacheService } from '../../infrastructure/cache/CacheService';
+import { getPaginationOptions, createPaginatedResponse, PaginatedResponse } from '../../presentation/utils/pagination';
+import { Request } from 'express';
+import { config } from '../../infrastructure/config/config';
 
 export class WarehouseService {
-  constructor(private warehouseRepository: IWarehouseRepository) {}
+  constructor(
+    private warehouseRepository: IWarehouseRepository,
+    private cacheService?: CacheService
+  ) {}
 
   async createWarehouse(
     id: string,

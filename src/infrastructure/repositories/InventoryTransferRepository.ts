@@ -22,8 +22,20 @@ export class InventoryTransferRepository implements IInventoryTransferRepository
   }
 
   async findAll(): Promise<InventoryTransfer[]> {
-    const docs = await InventoryTransferModel.find();
+    const docs = await InventoryTransferModel.find({ deletedAt: null });
     return docs.map(doc => this.mapToEntity(doc));
+  }
+
+  async findAllPaginated(skip: number, limit: number): Promise<InventoryTransfer[]> {
+    const docs = await InventoryTransferModel.find({ deletedAt: null })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    return docs.map(doc => this.mapToEntity(doc));
+  }
+
+  async count(): Promise<number> {
+    return InventoryTransferModel.countDocuments({ deletedAt: null });
   }
 
   async save(transfer: InventoryTransfer): Promise<InventoryTransfer> {
@@ -37,7 +49,6 @@ export class InventoryTransferRepository implements IInventoryTransferRepository
       updatedAt: transfer.updatedAt,
     };
 
-    // Only set _id if it's not empty (for existing transfers)
     if (transfer.id && transfer.id.trim() !== '') {
       docData._id = transfer.id;
     }
@@ -74,7 +85,11 @@ export class InventoryTransferRepository implements IInventoryTransferRepository
   }
 
   async findByToWarehouse(warehouseId: string): Promise<InventoryTransfer[]> {
-    const docs = await InventoryTransferModel.find({ toWarehouseId: warehouseId });
+    const docs = await InventoryTransferModel.find({ toWarehouseId: warehouseId, deletedAt: null });
     return docs.map(doc => this.mapToEntity(doc));
+  }
+
+  async softDelete(id: string): Promise<void> {
+    await InventoryTransferModel.findByIdAndUpdate(id, { deletedAt: new Date() });
   }
 }

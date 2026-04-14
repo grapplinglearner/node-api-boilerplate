@@ -1,5 +1,7 @@
 import { ProductService } from '../../domain/services/ProductService';
 import { Product } from '../../domain/entities/Product';
+import { Request } from 'express';
+import { PaginatedResponse } from '../../presentation/utils/pagination';
 
 export class GetProductUseCase {
   constructor(private productService: ProductService) {}
@@ -36,8 +38,8 @@ export class CreateProductUseCase {
 export class ListProductsUseCase {
   constructor(private productService: ProductService) {}
 
-  async execute(): Promise<Product[]> {
-    return this.productService.getAllProducts();
+  async execute(req?: Request): Promise<Product[] | PaginatedResponse<Product>> {
+    return this.productService.getAllProducts(req);
   }
 }
 

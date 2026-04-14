@@ -11,6 +11,7 @@ import {
 } from '../../application/usecases/AuthUseCases';
 import { AuthMiddleware, AuthenticatedRequest } from '../middleware/authMiddleware';
 import { Permission } from '../../domain/types/auth';
+import { validate, authSchemas } from '../middleware/validation/schemas';
 
 export function createAuthRoutes(
   authenticationService: AuthenticationService,
@@ -26,14 +27,9 @@ export function createAuthRoutes(
   const verifyTokenUseCase = new VerifyTokenUseCase(authenticationService);
   const getCurrentUserUseCase = new GetCurrentUserUseCase(userRepository);
 
-  router.post('/login', async (req, res) => {
+  router.post('/login', validate(authSchemas.login), async (req, res) => {
     try {
       const { email, password } = req.body;
-
-      if (!email || !password) {
-        res.status(400).json({ error: 'Email and password are required' });
-        return;
-      }
 
       const result = await loginUseCase.execute({ email, password });
 
@@ -57,19 +53,9 @@ export function createAuthRoutes(
     }
   });
 
-  router.post('/register', async (req, res) => {
+  router.post('/register', validate(authSchemas.register), async (req, res) => {
     try {
       const { email, password, name } = req.body;
-
-      if (!email || !password || !name) {
-        res.status(400).json({ error: 'Email, password, and name are required' });
-        return;
-      }
-
-      if (password.length < 6) {
-        res.status(400).json({ error: 'Password must be at least 6 characters' });
-        return;
-      }
 
       const result = await registerUseCase.execute({ email, password, name });
 
@@ -93,14 +79,9 @@ export function createAuthRoutes(
     }
   });
 
-  router.post('/refresh', async (req, res) => {
+  router.post('/refresh', validate(authSchemas.refreshToken), async (req, res) => {
     try {
       const { refreshToken } = req.body;
-
-      if (!refreshToken) {
-        res.status(400).json({ error: 'Refresh token is required' });
-        return;
-      }
 
       const token = await refreshTokenUseCase.execute(refreshToken);
 

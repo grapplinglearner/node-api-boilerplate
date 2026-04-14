@@ -21,8 +21,20 @@ export class WarehouseRepository implements IWarehouseRepository {
   }
 
   async findAll(): Promise<Warehouse[]> {
-    const docs = await WarehouseModel.find();
+    const docs = await WarehouseModel.find({ deletedAt: null });
     return docs.map(doc => this.mapToEntity(doc));
+  }
+
+  async findAllPaginated(skip: number, limit: number): Promise<Warehouse[]> {
+    const docs = await WarehouseModel.find({ deletedAt: null })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    return docs.map(doc => this.mapToEntity(doc));
+  }
+
+  async count(): Promise<number> {
+    return WarehouseModel.countDocuments({ deletedAt: null });
   }
 
   async save(warehouse: Warehouse): Promise<Warehouse> {
@@ -35,7 +47,6 @@ export class WarehouseRepository implements IWarehouseRepository {
       updatedAt: warehouse.updatedAt,
     };
 
-    // Only set _id if it's not empty (for existing warehouses)
     if (warehouse.id && warehouse.id.trim() !== '') {
       docData._id = warehouse.id;
     }
@@ -66,5 +77,9 @@ export class WarehouseRepository implements IWarehouseRepository {
 
   async delete(id: string): Promise<void> {
     await WarehouseModel.findByIdAndDelete(id);
+  }
+
+  async softDelete(id: string): Promise<void> {
+    await WarehouseModel.findByIdAndUpdate(id, { deletedAt: new Date() });
   }
 }

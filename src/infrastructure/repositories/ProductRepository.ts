@@ -28,8 +28,20 @@ export class ProductRepository implements IProductRepository {
   }
 
   async findAll(): Promise<Product[]> {
-    const docs = await ProductModel.find();
+    const docs = await ProductModel.find({ deletedAt: null });
     return docs.map(doc => this.mapToEntity(doc));
+  }
+
+  async findAllPaginated(skip: number, limit: number): Promise<Product[]> {
+    const docs = await ProductModel.find({ deletedAt: null })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    return docs.map(doc => this.mapToEntity(doc));
+  }
+
+  async count(): Promise<number> {
+    return ProductModel.countDocuments({ deletedAt: null });
   }
 
   async save(product: Product): Promise<Product> {
@@ -44,7 +56,6 @@ export class ProductRepository implements IProductRepository {
       updatedAt: product.updatedAt,
     };
 
-    // Only set _id if it's not empty (for existing products)
     if (product.id && product.id.trim() !== '') {
       docData._id = product.id;
     }
@@ -79,8 +90,12 @@ export class ProductRepository implements IProductRepository {
     await ProductModel.findByIdAndDelete(id);
   }
 
+  async softDelete(id: string): Promise<void> {
+    await ProductModel.findByIdAndUpdate(id, { deletedAt: new Date() });
+  }
+
   async findByWarehouse(warehouseId: string): Promise<Product[]> {
-    const docs = await ProductModel.find({ warehouseLocation: warehouseId });
+    const docs = await ProductModel.find({ warehouseLocation: warehouseId, deletedAt: null });
     return docs.map(doc => this.mapToEntity(doc));
   }
 }

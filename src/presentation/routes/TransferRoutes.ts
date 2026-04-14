@@ -9,6 +9,7 @@ import {
 } from '../../application/usecases/InventoryTransferUseCases';
 import { AuthMiddleware, AuthenticatedRequest } from '../middleware/authMiddleware';
 import { Permission } from '../../domain/types/auth';
+import { validate, transferSchemas } from '../middleware/validation/schemas';
 
 export function createTransferRoutes(transferService: InventoryTransferService, authMiddleware: AuthMiddleware): Router {
   const router = Router();
@@ -19,7 +20,7 @@ export function createTransferRoutes(transferService: InventoryTransferService, 
   const getPendingUseCase = new GetPendingTransfersUseCase(transferService);
   const listAllUseCase = new ListAllTransfersUseCase(transferService);
 
-  router.post('/', authMiddleware.requirePermission(Permission.CREATE_TRANSFERS), async (req: AuthenticatedRequest, res: Response) => {
+  router.post('/', authMiddleware.requirePermission(Permission.CREATE_TRANSFERS), validate(transferSchemas.create), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const transfer = await initiateTransferUseCase.execute({
         id: req.body.id,

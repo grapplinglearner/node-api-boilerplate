@@ -134,9 +134,6 @@ export class AuthMiddleware {
     };
   };
 
-  /**
-   * Require admin role middleware
-   */
   requireAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ error: 'Authorization token is required' });
@@ -151,9 +148,6 @@ export class AuthMiddleware {
     next();
   };
 
-  /**
-   * Require super admin role middleware
-   */
   requireSuperAdmin = (req: AuthenticatedRequest, res: Response, next: NextFunction): void => {
     if (!req.user) {
       res.status(401).json({ error: 'Authorization token is required' });

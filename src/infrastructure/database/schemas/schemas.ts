@@ -9,6 +9,7 @@ export interface IProductDocument extends Document {
   warehouseLocation: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date;
 }
 
 const productSchema = new Schema<IProductDocument>(
@@ -19,6 +20,7 @@ const productSchema = new Schema<IProductDocument>(
     price: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 0 },
     warehouseLocation: { type: String, required: true },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
@@ -32,6 +34,7 @@ export interface IWarehouseDocument extends Document {
   currentUsage: number;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date;
 }
 
 const warehouseSchema = new Schema<IWarehouseDocument>(
@@ -40,6 +43,7 @@ const warehouseSchema = new Schema<IWarehouseDocument>(
     location: { type: String, required: true },
     capacity: { type: Number, required: true, min: 1 },
     currentUsage: { type: Number, default: 0, min: 0 },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
@@ -54,6 +58,7 @@ export interface IInventoryTransferDocument extends Document {
   status: string;
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date;
 }
 
 const inventoryTransferSchema = new Schema<IInventoryTransferDocument>(
@@ -67,6 +72,7 @@ const inventoryTransferSchema = new Schema<IInventoryTransferDocument>(
       enum: ['PENDING', 'IN_TRANSIT', 'COMPLETED', 'FAILED'],
       default: 'PENDING',
     },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
@@ -83,6 +89,7 @@ export interface IUserDocument extends Document {
   role: 'super_admin' | 'admin' | 'moderator' | 'user';
   createdAt: Date;
   updatedAt: Date;
+  deletedAt?: Date;
 }
 
 const userSchema = new Schema<IUserDocument>(
@@ -95,6 +102,7 @@ const userSchema = new Schema<IUserDocument>(
       enum: ['super_admin', 'admin', 'moderator', 'user'],
       default: 'user',
     },
+    deletedAt: { type: Date, default: null },
   },
   { timestamps: true }
 );

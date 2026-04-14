@@ -1,11 +1,13 @@
 import { InventoryTransfer, TransferStatus } from '../entities/InventoryTransfer';
 import { IInventoryTransferRepository, IProductRepository, IWarehouseRepository } from '../repositories/IRepository';
+import { EmailService } from '../../infrastructure/email/EmailService';
 
 export class InventoryTransferService {
   constructor(
     private transferRepository: IInventoryTransferRepository,
     private productRepository: IProductRepository,
-    private warehouseRepository: IWarehouseRepository
+    private warehouseRepository: IWarehouseRepository,
+    private emailService?: EmailService
   ) {}
 
   async initiateTransfer(

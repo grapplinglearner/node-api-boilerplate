@@ -3,6 +3,7 @@ import { WarehouseService } from '../../domain/services/WarehouseService';
 import { CreateWarehouseUseCase, GetWarehouseUseCase, ListWarehousesUseCase, UpdateWarehouseUseCase, DeleteWarehouseUseCase, GetWarehouseCapacityUseCase } from '../../application/usecases/WarehouseUseCases';
 import { AuthMiddleware, AuthenticatedRequest } from '../middleware/authMiddleware';
 import { Permission } from '../../domain/types/auth';
+import { validate, warehouseSchemas } from '../middleware/validation/schemas';
 
 export function createWarehouseRoutes(warehouseService: WarehouseService, authMiddleware: AuthMiddleware): Router {
   const router = Router();
@@ -14,7 +15,7 @@ export function createWarehouseRoutes(warehouseService: WarehouseService, authMi
   const deleteWarehouseUseCase = new DeleteWarehouseUseCase(warehouseService);
   const getCapacityUseCase = new GetWarehouseCapacityUseCase(warehouseService);
 
-  router.post('/', authMiddleware.requirePermission(Permission.CREATE_WAREHOUSES), async (req: AuthenticatedRequest, res: Response) => {
+  router.post('/', authMiddleware.requirePermission(Permission.CREATE_WAREHOUSES), validate(warehouseSchemas.create), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const warehouse = await createWarehouseUseCase.execute({
         id: req.body.id,
@@ -47,7 +48,7 @@ export function createWarehouseRoutes(warehouseService: WarehouseService, authMi
     }
   });
 
-  router.put('/:id', authMiddleware.requirePermission(Permission.UPDATE_WAREHOUSES), async (req: AuthenticatedRequest, res: Response) => {
+  router.put('/:id', authMiddleware.requirePermission(Permission.UPDATE_WAREHOUSES), validate(warehouseSchemas.update), async (req: AuthenticatedRequest, res: Response) => {
     try {
       const id = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
       const warehouse = await updateWarehouseUseCase.execute(id, {

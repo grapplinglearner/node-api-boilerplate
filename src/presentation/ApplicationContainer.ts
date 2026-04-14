@@ -5,6 +5,9 @@ import { AuthorizationService } from '../domain/services/AuthorizationService';
 import { ProductRepository, WarehouseRepository, InventoryTransferRepository, UserRepository } from '../infrastructure/repositories';
 import { IUserRepository } from '../domain/repositories/IRepository';
 import { AuthMiddleware } from './middleware/authMiddleware';
+import { CacheService } from '../infrastructure/cache/CacheService';
+import { EmailService } from '../infrastructure/email/EmailService';
+import logger from '../infrastructure/logging/logger';
 
 export class ApplicationContainer {
   private productService: ProductService;
@@ -14,6 +17,8 @@ export class ApplicationContainer {
   private authorizationService: AuthorizationService;
   private authMiddleware: AuthMiddleware;
   private userRepository: IUserRepository;
+  private cacheService: CacheService;
+  private emailService: EmailService;
 
   constructor() {
     const productRepository = new ProductRepository();
@@ -21,12 +26,16 @@ export class ApplicationContainer {
     const inventoryTransferRepository = new InventoryTransferRepository();
     this.userRepository = new UserRepository();
 
-    this.productService = new ProductService(productRepository);
-    this.warehouseService = new WarehouseService(warehouseRepository);
+    this.cacheService = new CacheService();
+    this.emailService = new EmailService();
+
+    this.productService = new ProductService(productRepository, this.cacheService);
+    this.warehouseService = new WarehouseService(warehouseRepository, this.cacheService);
     this.transferService = new InventoryTransferService(
       inventoryTransferRepository,
       productRepository,
-      warehouseRepository
+      warehouseRepository,
+      this.emailService
     );
     this.authenticationService = new AuthenticationService(this.userRepository);
     this.authorizationService = new AuthorizationService();
@@ -59,5 +68,13 @@ export class ApplicationContainer {
 
   getUserRepository(): IUserRepository {
     return this.userRepository;
+  }
+
+  getCacheService(): CacheService {
+    return this.cacheService;
+  }
+
+  getEmailService(): EmailService {
+    return this.emailService;
   }
 }

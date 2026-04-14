@@ -27,8 +27,20 @@ export class UserRepository implements IUserRepository {
   }
 
   async findAll(): Promise<User[]> {
-    const docs = await UserModel.find();
+    const docs = await UserModel.find({ deletedAt: null });
     return docs.map(doc => this.mapToEntity(doc));
+  }
+
+  async findAllPaginated(skip: number, limit: number): Promise<User[]> {
+    const docs = await UserModel.find({ deletedAt: null })
+      .skip(skip)
+      .limit(limit)
+      .sort({ createdAt: -1 });
+    return docs.map(doc => this.mapToEntity(doc));
+  }
+
+  async count(): Promise<number> {
+    return UserModel.countDocuments({ deletedAt: null });
   }
 
   async save(user: User): Promise<User> {
@@ -41,7 +53,6 @@ export class UserRepository implements IUserRepository {
       updatedAt: user.updatedAt,
     };
 
-    // Only set _id if it's not empty (for existing users)
     if (user.id && user.id.trim() !== '') {
       docData._id = user.id;
     }
@@ -72,5 +83,9 @@ export class UserRepository implements IUserRepository {
 
   async delete(id: string): Promise<void> {
     await UserModel.findByIdAndDelete(id);
+  }
+
+  async softDelete(id: string): Promise<void> {
+    await UserModel.findByIdAndUpdate(id, { deletedAt: new Date() });
   }
 }
